@@ -1766,9 +1766,7 @@ M1c_cl &lt;- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_A_
 ## (Intercept)    -3.70928492 -3.138695
 ## negemo_bin_C    0.02354288  1.514625
 ## negemo_bin_A_l  0.42410675  1.638611</code></pre>
-<pre class="r"><code>p_negemo_cl &lt;- summary(M1_cl)$coefficients[2,4]
-
-#Parent leads
+<pre class="r"><code>#Parent leads
 M1_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (1 | SID), data = d_adultLeads, family = binomial)
 M1b_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A | SID), data = d_adultLeads, family = binomial)</code></pre>
 <pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
@@ -1843,7 +1841,6 @@ M1d_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A 
 ## (Intercept)    -3.885248 -3.267070
 ## negemo_bin_A    0.235680  1.651059
 ## negemo_bin_C_l -0.340942  1.281607</code></pre>
-<pre class="r"><code>p_negemo_pl &lt;- summary(M1_pl)$coefficients[2,4]</code></pre>
 </div>
 <div id="positive-affect-word-analyses" class="section level2">
 <h2>Positive Affect Word Analyses</h2>
@@ -1919,9 +1916,7 @@ anova(M1_cl, M1b_cl)</code></pre>
 ## (Intercept)    -0.96898427 -0.6729529
 ## posemo_bin_C    0.05930198  0.4814072
 ## posemo_bin_A_l -0.09681354  0.2494346</code></pre>
-<pre class="r"><code>p_posemo_cl &lt;- summary(M1_cl)$coefficients[2,4]
-
-#Parent leads
+<pre class="r"><code>#Parent leads
 M1_pl &lt;- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (1 | SID), data = d_adultLeads, family = binomial)
 M1b_pl &lt;- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A | SID), data = d_adultLeads, family = binomial)</code></pre>
 <pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
@@ -1993,7 +1988,6 @@ anova(M1_pl, M1b_pl)</code></pre>
 ## (Intercept)    -1.97074219 -1.6254030
 ## posemo_bin_A   -0.05194544  0.3710318
 ## posemo_bin_C_l  0.03761435  0.5412201</code></pre>
-<pre class="r"><code>p_posemo_pl &lt;- summary(M1_pl)$coefficients[2,4]</code></pre>
 </div>
 <div id="linguistic-distance-analyses" class="section level2">
 <h2>Linguistic Distance Analyses</h2>
@@ -2077,9 +2071,7 @@ myOut</code></pre>
 ## (Intercept)  -0.020744015 0.02794389
 ## lingdist_C    0.001633361 0.06432051
 ## lingdist_A_l  0.015146497 0.08717977</code></pre>
-<pre class="r"><code>p_lingdist_cl &lt;- summary(M1_cl)$coefficients[2,5]
-
-#Parent leads
+<pre class="r"><code>#Parent leads
 M1_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (1 | SID), data = d_adultLeads)
 M1b_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A | SID), data = d_adultLeads)
 M1c_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_C_l | SID), data = d_adultLeads)
@@ -2163,7 +2155,6 @@ anova(M1_pl, M1b_pl)</code></pre>
 ## (Intercept)  -0.03079563 0.02156395
 ## lingdist_A    0.03646417 0.11799280
 ## lingdist_C_l -0.02614861 0.06745894</code></pre>
-<pre class="r"><code>p_lingdist_pl &lt;- summary(M1c_pl)$coefficients[2,5]</code></pre>
 </div>
 <div id="word-count" class="section level2">
 <h2>Word Count</h2>
@@ -2246,9 +2237,7 @@ M1d_cl &lt;- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C+WC_log_A_l | SID)
 ## (Intercept)  2.00303274 2.254917212
 ## WC_log_C    -0.07683609 0.006462882
 ## WC_log_A_l  -0.03189693 0.040180807</code></pre>
-<pre class="r"><code>p_WC_cl &lt;- summary(M1_cl)$coefficients[2,5]
-
-#Parent leads
+<pre class="r"><code>#Parent leads
 M1_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (1 | SID), data = d_adultLeads)
 M1b_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A | SID), data = d_adultLeads)
 M1c_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_C_l | SID), data = d_adultLeads)
@@ -2325,7 +2314,6 @@ anova(M1_pl, M1b_pl)</code></pre>
 ## (Intercept)  1.65547612  1.86717167
 ## WC_log_A    -0.08066471 -0.01768412
 ## WC_log_C_l   0.02413616  0.09678851</code></pre>
-<pre class="r"><code>p_WC_pl &lt;- summary(M1_pl)$coefficients[2,5]</code></pre>
 </div>
 
 
