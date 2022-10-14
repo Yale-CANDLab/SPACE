@@ -38,6 +38,8 @@ if (!require("effectsize")) {install.packages("effectsize"); require("effectsize
 
 #
 ##-----------Load and process data-------
+setwd("/Users/en7113/Dropbox (Personal)/Yale_Postdoc/Research/SPACE/OSF")
+
 d <- read.csv("SPACE_Data.csv")
 d$SID <- as.factor(d$SID)
 SIDs <- unique(d$SID)
@@ -66,34 +68,34 @@ d_A <- d[d$Speaker=="adult",]
 # Make child leads / adult leads datasets
 d_childLeads <- NULL
 for (s in SIDs) {
-    dc <- d_C[d_C$SID==s,]
-    da <- d_A[d_A$SID==s,]
-
-    if (nrow(dc) > 0 & nrow(da) > 0) {
-      if (dc$Turn[1] == 2) {da <- da[-1,]}
-      dcl <- dc[1:min(nrow(da),nrow(dc)),]
-      dcl[,paste0(lingCols,"_A")] <- da[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_A")]
-      dcl[,paste0(lingCols,"_A_l")] <- lag(da[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_A")])
-      dcl$Exchange <- 1:nrow(dcl)
-      dcl$adultTurn <- da[1:min(nrow(da),nrow(dc)),"adultTurn"]
-
+  dc <- d_C[d_C$SID==s,]
+  da <- d_A[d_A$SID==s,]
+  
+  if (nrow(dc) > 0 & nrow(da) > 0) {
+    if (dc$Turn[1] == 2) {da <- da[-1,]}
+    dcl <- dc[1:min(nrow(da),nrow(dc)),]
+    dcl[,paste0(lingCols,"_A")] <- da[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_A")]
+    dcl[,paste0(lingCols,"_A_l")] <- lag(da[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_A")])
+    dcl$Exchange <- 1:nrow(dcl)
+    dcl$adultTurn <- da[1:min(nrow(da),nrow(dc)),"adultTurn"]
+    
     if (is.null(d_childLeads)) {d_childLeads <- dcl} else {d_childLeads <- rbind(d_childLeads,dcl)}
   }
 }
 
 d_adultLeads <- NULL
 for (s in SIDs) {
-    dc <- d_C[d_C$SID==s,]
-    da <- d_A[d_A$SID==s,]
-
-    if (nrow(dc) > 0 & nrow(da) > 0) {
-      if (da$Turn[1] == 2) {dc <- dc[-1,]}
-      dal <- da[1:min(nrow(da),nrow(dc)),]
-      dal[,paste0(lingCols,"_C")] <- dc[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_C")]
-      dal[,paste0(lingCols,"_C_l")] <- lag(dc[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_C")])
-      dal$Exchange <- 1:nrow(dal)
-      dal$childTurn <- dc[1:min(nrow(da),nrow(dc)),"childTurn"]
-
+  dc <- d_C[d_C$SID==s,]
+  da <- d_A[d_A$SID==s,]
+  
+  if (nrow(dc) > 0 & nrow(da) > 0) {
+    if (da$Turn[1] == 2) {dc <- dc[-1,]}
+    dal <- da[1:min(nrow(da),nrow(dc)),]
+    dal[,paste0(lingCols,"_C")] <- dc[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_C")]
+    dal[,paste0(lingCols,"_C_l")] <- lag(dc[1:min(nrow(da),nrow(dc)),paste0(lingCols,"_C")])
+    dal$Exchange <- 1:nrow(dal)
+    dal$childTurn <- dc[1:min(nrow(da),nrow(dc)),"childTurn"]
+    
     if (is.null(d_adultLeads)) {d_adultLeads <- dal} else {d_adultLeads <- rbind(d_adultLeads,dal)}
   }
 }
@@ -111,7 +113,7 @@ d_adultLeads$SID <- as.factor(d_adultLeads$SID)
 ```
 
 ***  
-  
+
 
 ## Table 1
 
@@ -160,6 +162,13 @@ sum(is.na(d_Ps$FamilyIncome))
 table(d_Ps$FamilyIncome)
 round(table(d_Ps$FamilyIncome)/(N-sum(is.na(d_Ps$FamilyIncome)))*100,2)
 
+#Word count
+WCtotals <- tapply(d$WC, d[,c("SID","Speaker")], sum, na.rm=T) 
+mean(WCtotals); sd(WCtotals) #average and sd words/person across all people
+colMeans(WCtotals)
+sd(WCtotals[,1])
+sd(WCtotals[,2])
+
 #Turns
 nrow(d) #Turns
 sum(d$Speaker=="child"); sum(d$Speaker=="child")/length(d$WC)*100 #Child turns
@@ -192,69 +201,135 @@ mean(d$inadubles[d$Speaker=="adult"]/(d$WC[d$Speaker=="adult"]+d$inadubles[d$Spe
 
 ```
 
-  
-  
+
+
 ## Negative Affect Word Analyses
 
 ``` {r negemo, warning=F}
 
 #Child leads
 M1_cl <- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (1 | SID), data = d_childLeads, family = binomial)
-standardize_parameters(M1_cl, method="basic")
+M1b_cl <- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_C | SID), data = d_childLeads, family = binomial)
+M1c_cl <- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_A_l | SID), data = d_childLeads, family = binomial)
+M1d_cl <- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_C + negemo_bin_A_l | SID), data = d_childLeads, family = binomial)
+anova(M1_cl, M1b_cl)
+anova(M1_cl, M1c_cl)
+anova(M1_cl, M1d_cl)
+exp(cbind(est=fixef(M1_cl),confint(M1_cl, parm="beta_", method = "Wald")))
 summary(M1_cl)
+confint(M1_cl, method="Wald")
+p_negemo_cl <- summary(M1_cl)$coefficients[2,4]
 
 #Parent leads
 M1_pl <- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (1 | SID), data = d_adultLeads, family = binomial)
-standardize_parameters(M1_pl, method="basic")
+M1b_pl <- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A | SID), data = d_adultLeads, family = binomial)
+M1c_pl <- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+M1d_pl <- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A + negemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+anova(M1_pl, M1b_pl)
+anova(M1_pl, M1c_pl)
+anova(M1_pl, M1d_pl)
+exp(cbind(est=fixef(M1_pl),confint(M1_pl, parm="beta_", method = "Wald")))
 summary(M1_pl)
+confint(M1_pl, method="Wald")
+p_negemo_pl <- summary(M1_pl)$coefficients[2,4]
 
 ```
-  
-  
+
+
 ## Positive Affect Word Analyses
 
 ``` {r posemo, warning=F}
 #Child leads
 M1_cl <- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (1 | SID), data = d_childLeads, family = binomial)
-standardize_parameters(M1_cl, method="basic")
+M1b_cl <- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_C | SID), data = d_childLeads, family = binomial)
+M1c_cl <- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_A_l | SID), data = d_childLeads, family = binomial)
+M1d_cl <- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_C+posemo_bin_A_l | SID), data = d_childLeads, family = binomial)
+anova(M1_cl, M1b_cl)
+anova(M1_cl, M1c_cl)
+anova(M1_cl, M1d_cl)
+exp(cbind(est=fixef(M1_cl),confint(M1_cl, parm="beta_", method = "Wald")))
 summary(M1_cl)
+confint(M1_cl, method="Wald")
+p_posemo_cl <- summary(M1_cl)$coefficients[2,4]
 
 #Parent leads
 M1_pl <- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (1 | SID), data = d_adultLeads, family = binomial)
-standardize_parameters(M1_pl, method="basic")
+M1b_pl <- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A | SID), data = d_adultLeads, family = binomial)
+M1c_pl <- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+M1d_pl <- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A+posemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+anova(M1_pl, M1b_pl)
+anova(M1_pl, M1c_pl)
+anova(M1_pl, M1d_pl)
+exp(cbind(est=fixef(M1_pl),confint(M1_pl, parm="beta_", method = "Wald")))
 summary(M1_pl)
+confint(M1_pl, method="Wald")
+p_posemo_pl <- summary(M1_pl)$coefficients[2,4]
 
 ```
-  
-  
-  
+
+
+
 ## Linguistic Distance Analyses
 
 ``` {r lingdist, warning=F}
 #Child leads
 M1_cl <- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (1 | SID), data = d_childLeads)
-standardize_parameters(M1_cl, method="basic")
+M1b_cl <- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_C | SID), data = d_childLeads)
+M1c_cl <- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_A_l | SID), data = d_childLeads)
+M1d_cl <- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_C + lingdist_A_l | SID), data = d_childLeads)
+anova(M1_cl, M1b_cl)
+anova(M1_cl, M1c_cl)
+anova(M1_cl, M1d_cl)
+myOut <- standardize_parameters(M1_cl, method="basic")
+myOut
+myOut$CI_low[2] #unrounded CI_low for lingdist_C
 summary(M1_cl)
+confint(M1_cl, method="Wald")
+p_lingdist_cl <- summary(M1_cl)$coefficients[2,5]
 
 #Parent leads
 M1_pl <- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (1 | SID), data = d_adultLeads)
-standardize_parameters(M1_pl, method="basic")
-summary(M1_pl)
+M1b_pl <- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A | SID), data = d_adultLeads)
+M1c_pl <- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_C_l | SID), data = d_adultLeads)
+M1d_pl <- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A + lingdist_C_l| SID), data = d_adultLeads)
+anova(M1_pl, M1b_pl)
+anova(M1_pl, M1c_pl)
+anova(M1c_pl, M1d_pl)
+standardize_parameters(M1c_pl, method="basic")
+summary(M1c_pl)
+confint(M1c_pl, method = "Wald")
+p_lingdist_pl <- summary(M1c_pl)$coefficients[2,5]
 
 ```
-  
-  
+
+
 ## Word Count
 
 ``` {r WC, warning=F}
 #Child leads
 M1_cl <- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (1 | SID), data = d_childLeads)
+M1b_cl <- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C | SID), data = d_childLeads)
+M1c_cl <- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_A_l | SID), data = d_childLeads)
+M1d_cl <- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C+WC_log_A_l | SID), data = d_childLeads)
+anova(M1_cl, M1b_cl)
+anova(M1_cl, M1c_cl)
+anova(M1_cl, M1d_cl)
 standardize_parameters(M1_cl, method="basic")
 summary(M1_cl)
+confint(M1_cl, method = "Wald")
+p_WC_cl <- summary(M1_cl)$coefficients[2,5]
 
 #Parent leads
 M1_pl <- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (1 | SID), data = d_adultLeads)
+M1b_pl <- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A | SID), data = d_adultLeads)
+M1c_pl <- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_C_l | SID), data = d_adultLeads)
+M1d_pl <- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A+WC_log_C_l | SID), data = d_adultLeads)
+anova(M1_pl, M1b_pl)
+anova(M1_pl, M1c_pl)
+anova(M1_pl, M1d_pl)
 standardize_parameters(M1_pl, method="basic")
 summary(M1_pl)
-```
+confint(M1_pl, method = "Wald")
+p_WC_pl <- summary(M1_pl)$coefficients[2,5]
 
+```

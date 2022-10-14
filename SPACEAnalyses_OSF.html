@@ -1630,6 +1630,18 @@ sum(is.na(d_Ps$FamilyIncome))</code></pre>
 ##             14.61              8.99             44.94              5.62 
 ##   $41,000-$60,999   $61,000-$80,999   $81,000-$99,999 
 ##              5.62             10.11             10.11</code></pre>
+<pre class="r"><code>#Word count
+WCtotals &lt;- tapply(d$WC, d[,c(&quot;SID&quot;,&quot;Speaker&quot;)], sum, na.rm=T) 
+mean(WCtotals); sd(WCtotals) #average and sd words/person across all people</code></pre>
+<pre><code>## [1] 289.3548</code></pre>
+<pre><code>## [1] 167.9204</code></pre>
+<pre class="r"><code>colMeans(WCtotals)</code></pre>
+<pre><code>##    adult    child 
+## 355.1075 223.6022</code></pre>
+<pre class="r"><code>sd(WCtotals[,1])</code></pre>
+<pre><code>## [1] 170.891</code></pre>
+<pre class="r"><code>sd(WCtotals[,2])</code></pre>
+<pre><code>## [1] 136.9542</code></pre>
 <pre class="r"><code>#Turns
 nrow(d) #Turns</code></pre>
 <pre><code>## [1] 6519</code></pre>
@@ -1683,16 +1695,40 @@ mean(d$inadubles,na.rm=T)</code></pre>
 <h2>Negative Affect Word Analyses</h2>
 <pre class="r"><code>#Child leads
 M1_cl &lt;- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (1 | SID), data = d_childLeads, family = binomial)
-standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
-<pre><code>## # Standardization method: basic
-## 
-## Parameter      | Coefficient (std.) |         95% CI
-## ----------------------------------------------------
-## (Intercept)    |               0.00 | [ 0.00,  0.00]
-## negemo_bin_C   |               0.14 | [ 0.00,  0.27]
-## negemo_bin_A_l |               0.20 | [ 0.08,  0.32]
-## 
-## (Response is unstandardized)</code></pre>
+M1b_cl &lt;- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_C | SID), data = d_childLeads, family = binomial)
+M1c_cl &lt;- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_A_l | SID), data = d_childLeads, family = binomial)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>M1d_cl &lt;- glmer(negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_C + negemo_bin_A_l | SID), data = d_childLeads, family = binomial)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(M1_cl, M1b_cl)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (1 | SID)
+## M1b_cl: negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_C | SID)
+##        npar     AIC    BIC  logLik deviance Chisq Df Pr(&gt;Chisq)
+## M1_cl     4  998.27 1022.3 -495.13   990.27                    
+## M1b_cl    6 1000.72 1036.7 -494.36   988.72 1.552  2     0.4602</code></pre>
+<pre class="r"><code>anova(M1_cl, M1c_cl)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (1 | SID)
+## M1c_cl: negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_A_l | SID)
+##        npar     AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     4  998.27 1022.3 -495.13   990.27                     
+## M1c_cl    6 1002.25 1038.2 -495.13   990.25 0.0164  2     0.9918</code></pre>
+<pre class="r"><code>anova(M1_cl, M1d_cl)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (1 | SID)
+## M1d_cl: negemo_bin_A ~ negemo_bin_C + negemo_bin_A_l + (negemo_bin_C + negemo_bin_A_l | SID)
+##        npar     AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     4  998.27 1022.3 -495.13   990.27                     
+## M1d_cl    9 1006.54 1060.5 -494.27   988.54 1.7332  5     0.8847</code></pre>
+<pre class="r"><code>exp(cbind(est=fixef(M1_cl),confint(M1_cl, parm=&quot;beta_&quot;, method = &quot;Wald&quot;)))</code></pre>
+<pre><code>##                       est      2.5 %     97.5 %
+## (Intercept)    0.03258217 0.02449503 0.04333932
+## negemo_bin_C   2.15778822 1.02382220 4.54771348
+## negemo_bin_A_l 2.80487498 1.52822473 5.14801490</code></pre>
 <pre class="r"><code>summary(M1_cl)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
@@ -1714,8 +1750,8 @@ standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
 ## 
 ## Fixed effects:
 ##                Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)     -3.4240     0.1456 -23.522  &lt; 2e-16 ***
-## negemo_bin_C     0.7691     0.3804   2.022 0.043188 *  
+## (Intercept)     -3.4240     0.1456 -23.523  &lt; 2e-16 ***
+## negemo_bin_C     0.7691     0.3804   2.022 0.043191 *  
 ## negemo_bin_A_l   1.0314     0.3098   3.329 0.000872 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
@@ -1724,18 +1760,52 @@ standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
 ##             (Intr) ngm__C
 ## negemo_bn_C -0.167       
 ## negm_bn_A_l -0.074 -0.075</code></pre>
-<pre class="r"><code>#Parent leads
+<pre class="r"><code>confint(M1_cl, method=&quot;Wald&quot;)</code></pre>
+<pre><code>##                      2.5 %    97.5 %
+## .sig01                  NA        NA
+## (Intercept)    -3.70928492 -3.138695
+## negemo_bin_C    0.02354288  1.514625
+## negemo_bin_A_l  0.42410675  1.638611</code></pre>
+<pre class="r"><code>p_negemo_cl &lt;- summary(M1_cl)$coefficients[2,4]
+
+#Parent leads
 M1_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (1 | SID), data = d_adultLeads, family = binomial)
-standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
-<pre><code>## # Standardization method: basic
-## 
-## Parameter      | Coefficient (std.) |         95% CI
-## ----------------------------------------------------
-## (Intercept)    |               0.00 | [ 0.00,  0.00]
-## negemo_bin_A   |               0.19 | [ 0.05,  0.33]
-## negemo_bin_C_l |               0.08 | [-0.06,  0.23]
-## 
-## (Response is unstandardized)</code></pre>
+M1b_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A | SID), data = d_adultLeads, family = binomial)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>M1c_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+M1d_pl &lt;- glmer(negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A + negemo_bin_C_l | SID), data = d_adultLeads, family = binomial)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(M1_pl, M1b_pl)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (1 | SID)
+## M1b_pl: negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)  
+## M1_pl     4 882.05 905.99 -437.03   874.05                       
+## M1b_pl    6 880.74 916.65 -434.37   868.74 5.3112  2    0.07026 .
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(M1_pl, M1c_pl)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (1 | SID)
+## M1c_pl: negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     4 882.05 905.99 -437.03   874.05                     
+## M1c_pl    6 885.14 921.04 -436.57   873.14 0.9171  2     0.6322</code></pre>
+<pre class="r"><code>anova(M1_pl, M1d_pl)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (1 | SID)
+## M1d_pl: negemo_bin_C ~ negemo_bin_A + negemo_bin_C_l + (negemo_bin_A + negemo_bin_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     4 882.05 905.99 -437.03   874.05                     
+## M1d_pl    9 885.70 939.55 -433.85   867.70 6.3539  5     0.2733</code></pre>
+<pre class="r"><code>exp(cbind(est=fixef(M1_pl),confint(M1_pl, parm=&quot;beta_&quot;, method = &quot;Wald&quot;)))</code></pre>
+<pre><code>##                       est      2.5 %     97.5 %
+## (Intercept)    0.02798298 0.02054274 0.03811795
+## negemo_bin_A   2.56862117 1.26576919 5.21249434
+## negemo_bin_C_l 1.60052597 0.71110015 3.60242276</code></pre>
 <pre class="r"><code>summary(M1_pl)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
@@ -1758,8 +1828,8 @@ standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
 ## Fixed effects:
 ##                Estimate Std. Error z value Pr(&gt;|z|)    
 ## (Intercept)     -3.5762     0.1577 -22.677  &lt; 2e-16 ***
-## negemo_bin_A     0.9434     0.3610   2.613  0.00898 ** 
-## negemo_bin_C_l   0.4703     0.4139   1.136  0.25582    
+## negemo_bin_A     0.9434     0.3611   2.613  0.00898 ** 
+## negemo_bin_C_l   0.4703     0.4139   1.136  0.25584    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -1767,21 +1837,51 @@ standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
 ##             (Intr) ngm__A
 ## negemo_bn_A -0.215       
 ## negm_bn_C_l -0.011 -0.076</code></pre>
+<pre class="r"><code>confint(M1_pl, method=&quot;Wald&quot;)</code></pre>
+<pre><code>##                    2.5 %    97.5 %
+## .sig01                NA        NA
+## (Intercept)    -3.885248 -3.267070
+## negemo_bin_A    0.235680  1.651059
+## negemo_bin_C_l -0.340942  1.281607</code></pre>
+<pre class="r"><code>p_negemo_pl &lt;- summary(M1_pl)$coefficients[2,4]</code></pre>
 </div>
 <div id="positive-affect-word-analyses" class="section level2">
 <h2>Positive Affect Word Analyses</h2>
 <pre class="r"><code>#Child leads
 M1_cl &lt;- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (1 | SID), data = d_childLeads, family = binomial)
-standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
-<pre><code>## # Standardization method: basic
-## 
-## Parameter      | Coefficient (std.) |         95% CI
-## ----------------------------------------------------
-## (Intercept)    |               0.00 | [ 0.00,  0.00]
-## posemo_bin_C   |               0.10 | [ 0.02,  0.18]
-## posemo_bin_A_l |               0.04 | [-0.05,  0.12]
-## 
-## (Response is unstandardized)</code></pre>
+M1b_cl &lt;- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_C | SID), data = d_childLeads, family = binomial)
+M1c_cl &lt;- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_A_l | SID), data = d_childLeads, family = binomial)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>M1d_cl &lt;- glmer(posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_C+posemo_bin_A_l | SID), data = d_childLeads, family = binomial)
+anova(M1_cl, M1b_cl)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (1 | SID)
+## M1b_cl: posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_C | SID)
+##        npar    AIC    BIC  logLik deviance Chisq Df Pr(&gt;Chisq)
+## M1_cl     4 3713.3 3737.3 -1852.6   3705.3                    
+## M1b_cl    6 3717.1 3753.1 -1852.6   3705.1 0.122  2     0.9408</code></pre>
+<pre class="r"><code>anova(M1_cl, M1c_cl)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (1 | SID)
+## M1c_cl: posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_A_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     4 3713.3 3737.3 -1852.6   3705.3                     
+## M1c_cl    6 3716.7 3752.7 -1852.3   3704.7 0.5817  2     0.7476</code></pre>
+<pre class="r"><code>anova(M1_cl, M1d_cl)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (1 | SID)
+## M1d_cl: posemo_bin_A ~ posemo_bin_C + posemo_bin_A_l + (posemo_bin_C + posemo_bin_A_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     4 3713.3 3737.3 -1852.6   3705.3                     
+## M1d_cl    9 3722.6 3776.6 -1852.3   3704.6 0.6865  5     0.9837</code></pre>
+<pre class="r"><code>exp(cbind(est=fixef(M1_cl),confint(M1_cl, parm=&quot;beta_&quot;, method = &quot;Wald&quot;)))</code></pre>
+<pre><code>##                      est     2.5 %    97.5 %
+## (Intercept)    0.4400053 0.3794683 0.5101998
+## posemo_bin_C   1.3104290 1.0610956 1.6183501
+## posemo_bin_A_l 1.0792977 0.9077252 1.2832996</code></pre>
 <pre class="r"><code>summary(M1_cl)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
@@ -1813,18 +1913,49 @@ standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
 ##             (Intr) psm__C
 ## posemo_bn_C -0.239       
 ## posm_bn_A_l -0.375 -0.038</code></pre>
-<pre class="r"><code>#Parent leads
+<pre class="r"><code>confint(M1_cl, method=&quot;Wald&quot;)</code></pre>
+<pre><code>##                      2.5 %     97.5 %
+## .sig01                  NA         NA
+## (Intercept)    -0.96898427 -0.6729529
+## posemo_bin_C    0.05930198  0.4814072
+## posemo_bin_A_l -0.09681354  0.2494346</code></pre>
+<pre class="r"><code>p_posemo_cl &lt;- summary(M1_cl)$coefficients[2,4]
+
+#Parent leads
 M1_pl &lt;- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (1 | SID), data = d_adultLeads, family = binomial)
-standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
-<pre><code>## # Standardization method: basic
-## 
-## Parameter      | Coefficient (std.) |         95% CI
-## ----------------------------------------------------
-## (Intercept)    |               0.00 | [ 0.00,  0.00]
-## posemo_bin_A   |               0.07 | [-0.02,  0.17]
-## posemo_bin_C_l |               0.11 | [ 0.01,  0.20]
-## 
-## (Response is unstandardized)</code></pre>
+M1b_pl &lt;- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A | SID), data = d_adultLeads, family = binomial)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>M1c_pl &lt;- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+M1d_pl &lt;- glmer(posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A+posemo_bin_C_l | SID), data = d_adultLeads, family = binomial)
+anova(M1_pl, M1b_pl)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (1 | SID)
+## M1b_pl: posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     4 2603.2 2627.1 -1297.6   2595.2                     
+## M1b_pl    6 2605.2 2641.1 -1296.6   2593.2 1.9844  2     0.3708</code></pre>
+<pre class="r"><code>anova(M1_pl, M1c_pl)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (1 | SID)
+## M1c_pl: posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     4 2603.2 2627.1 -1297.6   2595.2                     
+## M1c_pl    6 2605.9 2641.8 -1296.9   2593.9 1.2894  2     0.5248</code></pre>
+<pre class="r"><code>anova(M1_pl, M1d_pl)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (1 | SID)
+## M1d_pl: posemo_bin_C ~ posemo_bin_A + posemo_bin_C_l + (posemo_bin_A + posemo_bin_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     4 2603.2 2627.1 -1297.6   2595.2                     
+## M1d_pl    9 2610.0 2663.8 -1296.0   2592.0 3.2063  5     0.6682</code></pre>
+<pre class="r"><code>exp(cbind(est=fixef(M1_pl),confint(M1_pl, parm=&quot;beta_&quot;, method = &quot;Wald&quot;)))</code></pre>
+<pre><code>##                      est     2.5 %    97.5 %
+## (Intercept)    0.1656178 0.1393534 0.1968323
+## posemo_bin_A   1.1729749 0.9493807 1.4492292
+## posemo_bin_C_l 1.3356489 1.0383307 1.7181019</code></pre>
 <pre class="r"><code>summary(M1_pl)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
@@ -1856,19 +1987,59 @@ standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
 ##             (Intr) psm__A
 ## posemo_bn_A -0.424       
 ## posm_bn_C_l -0.224 -0.051</code></pre>
+<pre class="r"><code>confint(M1_pl, method=&quot;Wald&quot;)</code></pre>
+<pre><code>##                      2.5 %     97.5 %
+## .sig01                  NA         NA
+## (Intercept)    -1.97074219 -1.6254030
+## posemo_bin_A   -0.05194544  0.3710318
+## posemo_bin_C_l  0.03761435  0.5412201</code></pre>
+<pre class="r"><code>p_posemo_pl &lt;- summary(M1_pl)$coefficients[2,4]</code></pre>
 </div>
 <div id="linguistic-distance-analyses" class="section level2">
 <h2>Linguistic Distance Analyses</h2>
 <pre class="r"><code>#Child leads
 M1_cl &lt;- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (1 | SID), data = d_childLeads)
-standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
+M1b_cl &lt;- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_C | SID), data = d_childLeads)
+M1c_cl &lt;- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_A_l | SID), data = d_childLeads)
+M1d_cl &lt;- lmer(lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_C + lingdist_A_l | SID), data = d_childLeads)
+anova(M1_cl, M1b_cl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: lingdist_A ~ lingdist_C + lingdist_A_l + (1 | SID)
+## M1b_cl: lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_C | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     5 3765.6 3795.6 -1877.8   3755.6                     
+## M1b_cl    7 3768.9 3810.9 -1877.5   3754.9 0.7012  2     0.7042</code></pre>
+<pre class="r"><code>anova(M1_cl, M1c_cl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: lingdist_A ~ lingdist_C + lingdist_A_l + (1 | SID)
+## M1c_cl: lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_A_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     5 3765.6 3795.6 -1877.8   3755.6                     
+## M1c_cl    7 3766.3 3808.3 -1876.1   3752.3 3.3398  2     0.1883</code></pre>
+<pre class="r"><code>anova(M1_cl, M1d_cl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: lingdist_A ~ lingdist_C + lingdist_A_l + (1 | SID)
+## M1d_cl: lingdist_A ~ lingdist_C + lingdist_A_l + (lingdist_C + lingdist_A_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     5 3765.6 3795.6 -1877.8   3755.6                     
+## M1d_cl   10 3771.2 3831.2 -1875.6   3751.2 4.4359  5     0.4885</code></pre>
+<pre class="r"><code>myOut &lt;- standardize_parameters(M1_cl, method=&quot;basic&quot;)
+myOut</code></pre>
 <pre><code>## # Standardization method: basic
 ## 
-## Parameter    | Coefficient (std.) |        95% CI
-## -------------------------------------------------
-## (Intercept)  |               0.00 | [ 0.00, 0.00]
-## lingdist_C   |               0.04 | [ 0.00, 0.07]
-## lingdist_A_l |               0.05 | [ 0.02, 0.09]</code></pre>
+## Parameter    | Std. Coef. |        95% CI
+## -----------------------------------------
+## (Intercept)  |       0.00 | [ 0.00, 0.00]
+## lingdist_C   |       0.04 | [ 0.00, 0.07]
+## lingdist_A_l |       0.05 | [ 0.02, 0.09]</code></pre>
+<pre class="r"><code>myOut$CI_low[2] #unrounded CI_low for lingdist_C</code></pre>
+<pre><code>## [1] 0.001852844</code></pre>
 <pre class="r"><code>summary(M1_cl)</code></pre>
 <pre><code>## Linear mixed model fit by REML. t-tests use Satterthwaite&#39;s method [
 ## lmerModLmerTest]
@@ -1899,59 +2070,145 @@ standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
 ##             (Intr) lngd_C
 ## lingdist_C   0.009       
 ## lingdst_A_l -0.010 -0.060</code></pre>
-<pre class="r"><code>#Parent leads
+<pre class="r"><code>confint(M1_cl, method=&quot;Wald&quot;)</code></pre>
+<pre><code>##                     2.5 %     97.5 %
+## .sig01                 NA         NA
+## .sigma                 NA         NA
+## (Intercept)  -0.020744015 0.02794389
+## lingdist_C    0.001633361 0.06432051
+## lingdist_A_l  0.015146497 0.08717977</code></pre>
+<pre class="r"><code>p_lingdist_cl &lt;- summary(M1_cl)$coefficients[2,5]
+
+#Parent leads
 M1_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (1 | SID), data = d_adultLeads)
-standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
+M1b_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A | SID), data = d_adultLeads)
+M1c_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_C_l | SID), data = d_adultLeads)
+M1d_pl &lt;- lmer(lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A + lingdist_C_l| SID), data = d_adultLeads)
+anova(M1_pl, M1b_pl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: lingdist_C ~ lingdist_A + lingdist_C_l + (1 | SID)
+## M1b_pl: lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)  
+## M1_pl     5 4465.5 4495.5 -2227.8   4455.5                       
+## M1b_pl    7 4464.9 4506.7 -2225.4   4450.9 4.6758  2    0.09653 .
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(M1_pl, M1c_pl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: lingdist_C ~ lingdist_A + lingdist_C_l + (1 | SID)
+## M1c_pl: lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)    
+## M1_pl     5 4465.5 4495.5 -2227.8   4455.5                         
+## M1c_pl    7 4450.6 4492.5 -2218.3   4436.6 18.955  2  7.656e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(M1c_pl, M1d_pl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1c_pl: lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_C_l | SID)
+## M1d_pl: lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_A + lingdist_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1c_pl    7 4450.6 4492.5 -2218.3   4436.6                     
+## M1d_pl   10 4452.6 4512.4 -2216.3   4432.6 3.9734  3     0.2643</code></pre>
+<pre class="r"><code>standardize_parameters(M1c_pl, method=&quot;basic&quot;)</code></pre>
 <pre><code>## # Standardization method: basic
 ## 
-## Parameter    | Coefficient (std.) |        95% CI
-## -------------------------------------------------
-## (Intercept)  |               0.00 | [ 0.00, 0.00]
-## lingdist_A   |               0.07 | [ 0.03, 0.10]
-## lingdist_C_l |               0.04 | [ 0.00, 0.07]</code></pre>
-<pre class="r"><code>summary(M1_pl)</code></pre>
+## Parameter    | Std. Coef. |        95% CI
+## -----------------------------------------
+## (Intercept)  |       0.00 | [ 0.00, 0.00]
+## lingdist_A   |       0.07 | [ 0.03, 0.10]
+## lingdist_C_l |       0.02 | [-0.03, 0.07]</code></pre>
+<pre class="r"><code>summary(M1c_pl)</code></pre>
 <pre><code>## Linear mixed model fit by REML. t-tests use Satterthwaite&#39;s method [
 ## lmerModLmerTest]
-## Formula: lingdist_C ~ lingdist_A + lingdist_C_l + (1 | SID)
+## Formula: lingdist_C ~ lingdist_A + lingdist_C_l + (lingdist_C_l | SID)
 ##    Data: d_adultLeads
 ## 
-## REML criterion at convergence: 4474.3
+## REML criterion at convergence: 4454.9
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -6.5682 -0.4259  0.1801  0.4501  4.6427 
+## -6.6026 -0.4330  0.1817  0.4391  4.6877 
 ## 
 ## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  SID      (Intercept) 0.008369 0.09148 
-##  Residual             0.262244 0.51210 
+##  Groups   Name         Variance Std.Dev. Corr 
+##  SID      (Intercept)  0.006836 0.08268       
+##           lingdist_C_l 0.015781 0.12562  -0.03
+##  Residual              0.258070 0.50801       
 ## Number of obs: 2933, groups:  SID, 93
 ## 
 ## Fixed effects:
 ##                Estimate Std. Error         df t value Pr(&gt;|t|)    
-## (Intercept)  -5.425e-03  1.403e-02  8.603e+01  -0.387 0.699975    
-## lingdist_A    7.366e-02  2.090e-02  2.929e+03   3.524 0.000432 ***
-## lingdist_C_l  3.667e-02  1.829e-02  2.930e+03   2.005 0.045040 *  
+## (Intercept)  -4.616e-03  1.336e-02  7.995e+01  -0.346 0.730576    
+## lingdist_A    7.723e-02  2.080e-02  2.914e+03   3.713 0.000209 ***
+## lingdist_C_l  2.065e-02  2.388e-02  9.018e+01   0.865 0.389356    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) lngd_A
-## lingdist_A  -0.003       
-## lingdst_C_l  0.014 -0.033</code></pre>
+## lingdist_A  -0.002       
+## lingdst_C_l -0.004 -0.032</code></pre>
+<pre class="r"><code>confint(M1c_pl, method = &quot;Wald&quot;)</code></pre>
+<pre><code>##                    2.5 %     97.5 %
+## .sig01                NA         NA
+## .sig02                NA         NA
+## .sig03                NA         NA
+## .sigma                NA         NA
+## (Intercept)  -0.03079563 0.02156395
+## lingdist_A    0.03646417 0.11799280
+## lingdist_C_l -0.02614861 0.06745894</code></pre>
+<pre class="r"><code>p_lingdist_pl &lt;- summary(M1c_pl)$coefficients[2,5]</code></pre>
 </div>
 <div id="word-count" class="section level2">
 <h2>Word Count</h2>
 <pre class="r"><code>#Child leads
 M1_cl &lt;- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (1 | SID), data = d_childLeads)
-standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
+M1b_cl &lt;- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C | SID), data = d_childLeads)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>M1c_cl &lt;- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_A_l | SID), data = d_childLeads)
+M1d_cl &lt;- lmer(WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C+WC_log_A_l | SID), data = d_childLeads)</code></pre>
+<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<pre class="r"><code>anova(M1_cl, M1b_cl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: WC_log_A ~ WC_log_C + WC_log_A_l + (1 | SID)
+## M1b_cl: WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     5 7130.9 7160.9 -3560.4   7120.9                     
+## M1b_cl    7 7134.0 7176.0 -3560.0   7120.0 0.8673  2     0.6481</code></pre>
+<pre class="r"><code>anova(M1_cl, M1c_cl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: WC_log_A ~ WC_log_C + WC_log_A_l + (1 | SID)
+## M1c_cl: WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_A_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_cl     5 7130.9 7160.9 -3560.4   7120.9                     
+## M1c_cl    7 7132.4 7174.4 -3559.2   7118.4 2.5244  2      0.283</code></pre>
+<pre class="r"><code>anova(M1_cl, M1d_cl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_childLeads
+## Models:
+## M1_cl: WC_log_A ~ WC_log_C + WC_log_A_l + (1 | SID)
+## M1d_cl: WC_log_A ~ WC_log_C + WC_log_A_l + (WC_log_C + WC_log_A_l | SID)
+##        npar    AIC    BIC  logLik deviance Chisq Df Pr(&gt;Chisq)
+## M1_cl     5 7130.9 7160.9 -3560.4   7120.9                    
+## M1d_cl   10 7136.5 7196.5 -3558.3   7116.5 4.396  5     0.4939</code></pre>
+<pre class="r"><code>standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
 <pre><code>## # Standardization method: basic
 ## 
-## Parameter   | Coefficient (std.) |        95% CI
-## ------------------------------------------------
-## (Intercept) |               0.00 | [ 0.00, 0.00]
-## WC_log_C    |              -0.03 | [-0.07, 0.01]
-## WC_log_A_l  |           4.14e-03 | [-0.03, 0.04]</code></pre>
+## Parameter   | Std. Coef. |        95% CI
+## ----------------------------------------
+## (Intercept) |       0.00 | [ 0.00, 0.00]
+## WC_log_C    |      -0.03 | [-0.07, 0.01]
+## WC_log_A_l  |   4.14e-03 | [-0.03, 0.04]</code></pre>
 <pre class="r"><code>summary(M1_cl)</code></pre>
 <pre><code>## Linear mixed model fit by REML. t-tests use Satterthwaite&#39;s method [
 ## lmerModLmerTest]
@@ -1982,16 +2239,55 @@ standardize_parameters(M1_cl, method=&quot;basic&quot;)</code></pre>
 ##            (Intr) WC_l_C
 ## WC_log_C   -0.614       
 ## WC_log_A_l -0.627  0.054</code></pre>
-<pre class="r"><code>#Parent leads
+<pre class="r"><code>confint(M1_cl, method = &quot;Wald&quot;)</code></pre>
+<pre><code>##                   2.5 %      97.5 %
+## .sig01               NA          NA
+## .sigma               NA          NA
+## (Intercept)  2.00303274 2.254917212
+## WC_log_C    -0.07683609 0.006462882
+## WC_log_A_l  -0.03189693 0.040180807</code></pre>
+<pre class="r"><code>p_WC_cl &lt;- summary(M1_cl)$coefficients[2,5]
+
+#Parent leads
 M1_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (1 | SID), data = d_adultLeads)
-standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
+M1b_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A | SID), data = d_adultLeads)
+M1c_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_C_l | SID), data = d_adultLeads)
+M1d_pl &lt;- lmer(WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A+WC_log_C_l | SID), data = d_adultLeads)
+anova(M1_pl, M1b_pl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: WC_log_C ~ WC_log_A + WC_log_C_l + (1 | SID)
+## M1b_pl: WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A | SID)
+##        npar    AIC    BIC  logLik deviance Chisq Df Pr(&gt;Chisq)
+## M1_pl     5 6180.3 6210.2 -3085.1   6170.3                    
+## M1b_pl    7 6183.5 6225.4 -3084.7   6169.5 0.796  2     0.6716</code></pre>
+<pre class="r"><code>anova(M1_pl, M1c_pl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: WC_log_C ~ WC_log_A + WC_log_C_l + (1 | SID)
+## M1c_pl: WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     5 6180.3 6210.2 -3085.1   6170.3                     
+## M1c_pl    7 6183.0 6224.9 -3084.5   6169.0 1.2971  2     0.5228</code></pre>
+<pre class="r"><code>anova(M1_pl, M1d_pl)</code></pre>
+<pre><code>## refitting model(s) with ML (instead of REML)</code></pre>
+<pre><code>## Data: d_adultLeads
+## Models:
+## M1_pl: WC_log_C ~ WC_log_A + WC_log_C_l + (1 | SID)
+## M1d_pl: WC_log_C ~ WC_log_A + WC_log_C_l + (WC_log_A + WC_log_C_l | SID)
+##        npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)
+## M1_pl     5 6180.3 6210.2 -3085.1   6170.3                     
+## M1d_pl   10 6187.2 6247.0 -3083.6   6167.2 3.0714  5      0.689</code></pre>
+<pre class="r"><code>standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
 <pre><code>## # Standardization method: basic
 ## 
-## Parameter   | Coefficient (std.) |         95% CI
-## -------------------------------------------------
-## (Intercept) |               0.00 | [ 0.00,  0.00]
-## WC_log_A    |              -0.06 | [-0.09, -0.02]
-## WC_log_C_l  |               0.06 | [ 0.02,  0.10]</code></pre>
+## Parameter   | Std. Coef. |         95% CI
+## -----------------------------------------
+## (Intercept) |       0.00 | [ 0.00,  0.00]
+## WC_log_A    |      -0.06 | [-0.09, -0.02]
+## WC_log_C_l  |       0.06 | [ 0.02,  0.10]</code></pre>
 <pre class="r"><code>summary(M1_pl)</code></pre>
 <pre><code>## Linear mixed model fit by REML. t-tests use Satterthwaite&#39;s method [
 ## lmerModLmerTest]
@@ -2022,6 +2318,14 @@ standardize_parameters(M1_pl, method=&quot;basic&quot;)</code></pre>
 ##            (Intr) WC_l_A
 ## WC_log_A   -0.634       
 ## WC_log_C_l -0.625  0.032</code></pre>
+<pre class="r"><code>confint(M1_pl, method = &quot;Wald&quot;)</code></pre>
+<pre><code>##                   2.5 %      97.5 %
+## .sig01               NA          NA
+## .sigma               NA          NA
+## (Intercept)  1.65547612  1.86717167
+## WC_log_A    -0.08066471 -0.01768412
+## WC_log_C_l   0.02413616  0.09678851</code></pre>
+<pre class="r"><code>p_WC_pl &lt;- summary(M1_pl)$coefficients[2,5]</code></pre>
 </div>
 
 
